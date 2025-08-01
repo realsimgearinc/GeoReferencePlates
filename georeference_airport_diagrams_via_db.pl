@@ -125,7 +125,7 @@ if ( $opt{i} ) {
 }
 
 # Which cycle to process
-my $cycle;
+my $cycle = 2508;
 if ( $opt{c} ) {
 
     # If something  provided on the command line use it instead
@@ -684,6 +684,38 @@ sub getPngSize {
 }
 
 sub getNumberOfStreams {
+
+    #Get number of objects/streams in the targetpdf
+
+    my $_mutoolShowOutput = qx(mutool show $main::targetPdf trailer/Size);
+    if ($debug) {
+            say "mutools show output: " . $_mutoolShowOutput;
+    }
+    my $retval            = $? >> 8;
+    die "No output from mutool show.  Is it installed? Return code was $retval"
+      if ( $_mutoolShowOutput eq "" || $retval != 0 );
+
+    my $_objectstreams;
+
+    foreach my $line ( split /[\r\n]+/, $_mutoolShowOutput ) {
+        ## Regular expression magic to grab what you want
+        if ($debug) {
+                say "Line: " . $line;
+        }
+        if ($line =~ /^(\d+)$/ ) {
+                $_objectstreams = $1;
+        }
+        if ( $line =~ /^(\d+)\s+(\d+)$/ ) {
+            $_objectstreams = $2;
+        }
+    }
+    if ($debug) {
+        say "Object streams: " . $_objectstreams;
+    }
+    return $_objectstreams;
+}
+
+sub getNumberOfStreamsOld {
 
     #Get number of objects/streams in the targetpdf
 
@@ -1924,7 +1956,7 @@ sub georeferenceTheRaster {
     ) = extractGeoreferenceInfo($gdalinfoCommandOutput);
 
     #---------------------
-    my $gcps2wldCommand = "gcps2wld.py '$main::targetvrt'";
+    my $gcps2wldCommand = "python3 gcps2wld.py '$main::targetvrt'";
     if ($debug) {
         say $gcps2wldCommand;
         say "";
@@ -2403,7 +2435,7 @@ sub findLatitudeAndLongitudeTextBoxes {
             my $textGroupRegexDataPoints2 = 1;
 
             my @tempLine2 = $_text =~ /$textGroupRegex2/ig;
-            my $_textAccumulator;
+            my $_textAccumulator = "";
             my $tempLineLength2 = 0 + @tempLine2;
             my $tempLineCount2  = $tempLineLength2 / $textGroupRegexDataPoints2;
 

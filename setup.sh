@@ -10,8 +10,7 @@ sudo apt-get install \
                      perltidy \
                      pngquant \
                      cpanminus \
-                     Carton
-
+                     
 #Libraries that aren't working yet with Carton
 sudo apt-get install \
                     libgd-perl \
